@@ -1,0 +1,40 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+  <h2>Register as a Service Provider</h2>
+  {% for m in messages %}<div class="card" style="background:#fff1f1;border-color:#f5c2c7;">{{ m|safe }}</div>{% endfor %}
+  <form method="post">{% csrf_token %}
+    <div class="grid">
+      <div class="card"><label>Public subdomain name<br><input type="text" name="slug" pattern="[a-z0-9-]+" required placeholder="e.g., fastfix"></label></div>
+      <div class="card"><label>Company name<br><input type="text" name="company_name" required></label></div>
+      <div class="card"><label>Email (used for login)<br><input type="email" name="email" required></label></div>
+      <div class="card"><label>Password<br><input type="password" name="password" required></label></div>
+      <div class="card"><label>Confirm Password<br><input type="password" name="password2" required></label></div>
+      <div class="card"><label>Phone<br><input type="text" name="phone" required></label></div>
+      <div class="card"><label>Address<br><input type="text" name="address" required></label></div>
+      <div class="card" style="grid-column:1/-1;"><label>Short company info (max 200 chars)<br><textarea name="description" maxlength="200" rows="3" required></textarea></label></div>
+    </div>
+    <input type="hidden" name="latitude" id="lat">
+    <input type="hidden" name="longitude" id="lng">
+    <h3>Mark your location on the map</h3>
+    <div id="map" class="map"></div>
+    <p style="margin-top:1rem;"><button id="regBtn" class="btn" type="submit" disabled>Register</button></p>
+  </form>
+</div>
+<script>
+let map, marker;
+function initProvRegMap(){
+  const sofia = {lat: 42.6977, lng: 23.3219};
+  map = new google.maps.Map(document.getElementById('map'), { center: sofia, zoom: 11 });
+  map.addListener('click', (e)=>{
+    if (marker) marker.setMap(null);
+    marker = new google.maps.Marker({ position: e.latLng, map });
+    document.getElementById('lat').value = e.latLng.lat();
+    document.getElementById('lng').value = e.latLng.lng();
+    document.getElementById('regBtn').disabled = false;
+  });
+}
+</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&callback=initProvRegMap"></script>
+{% endblock %}

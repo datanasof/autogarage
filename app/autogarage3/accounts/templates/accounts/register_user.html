@@ -1,0 +1,19 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+  <h2>Register as a User</h2>
+  {% for m in messages %}<div class="card" style="background:#fff1f1;border-color:#f5c2c7;">{{ m|safe }}</div>{% endfor %}
+  <form method="post">{% csrf_token %}
+    <div class="grid">
+      <div class="card"><label>Name<br><input type="text" name="name" required></label></div>
+      <div class="card"><label>Email (used for login)<br><input type="email" name="email" required></label></div>
+      <div class="card"><label>Password<br><input type="password" name="password" required></label></div>
+      <div class="card"><label>Confirm Password<br><input type="password" name="password2" required></label></div>
+      <div class="card"><label>Phone<br><input type="text" name="phone" required></label></div>
+      <div class="card"><label>City<br><input type="text" name="city" required></label></div>
+    </div>
+    <button class="btn" type="submit">Register</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,7 @@
+Django>=5.0,<6.0
+djangorestframework>=3.14,<4
+mysqlclient>=2.2
+celery>=5.3
+redis>=5.0
+gunicorn>=21.2
+pytz>=2023.3

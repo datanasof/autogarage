@@ -1,0 +1,15 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+  <h2>Edit my contact details</h2>
+  <form method="post">{% csrf_token %}
+    <div class="grid">
+      <div class="card"><label>Name<br><input type="text" name="name" value="{{ request.user.first_name }}"></label></div>
+      <div class="card"><label>Phone<br><input type="text" name="phone" value="{{ request.user.phone }}"></label></div>
+      <div class="card"><label>City<br><input type="text" name="city" value="{{ request.user.city }}"></label></div>
+    </div>
+    <button class="btn">Save</button>
+  </form>
+</div>
+{% endblock %}

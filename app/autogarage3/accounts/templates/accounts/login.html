@@ -1,0 +1,15 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+  <h2>Log-in</h2>
+  {% for m in messages %}<div class="card" style="background:#fff1f1;border-color:#f5c2c7;">{{ m|safe }}</div>{% endfor %}
+  <form method="post">{% csrf_token %}
+    <div class="grid">
+      <div class="card"><label>Email<br><input type="email" name="email" required></label></div>
+      <div class="card"><label>Password<br><input type="password" name="password" required></label></div>
+    </div>
+    <button class="btn" type="submit">Log-in</button>
+  </form>
+</div>
+{% endblock %}

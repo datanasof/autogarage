@@ -1,0 +1,1 @@
+Place your background image as home_bg.jpg here.

@@ -1,0 +1,19 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<section class="hero">
+  <div class="panel">
+    <h2>Welcome to AutoGarage!</h2>
+    <p style="font-size:1.2rem;">
+      Please <a href="/login/">log-in</a> or <a href="/register/user/">register as a User</a> / <a href="/register/provider/">register as a Service Provider</a>.
+    </p>
+  </div>
+</section>
+<div class="container">
+  <div class="grid">
+    <div class="card"><h3>Book & Manage Appointments</h3><p>Use your calendar to manage bookings.</p></div>
+    <div class="card"><h3>Find Providers</h3><p>Search by name/city and browse on the map.</p></div>
+    <div class="card"><h3>Providers</h3><p>Configure services, hours, and track bookings.</p></div>
+  </div>
+</div>
+{% endblock %}

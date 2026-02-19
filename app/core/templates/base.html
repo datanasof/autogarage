@@ -1,0 +1,24 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AutoGarage</title>
+  <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+<header class="container">
+  <h1>AutoGarage</h1>
+  <p class="muted">Car-Service Booking Portal</p>
+  <nav>
+    <a href="/">Home</a> | <a href="/calendar/">Calendar</a> |
+    <a href="/login/">Login</a> | <a href="/register/user/">Register (User)</a> | <a href="/register/provider/">Register (Provider)</a>
+  </nav>
+  <hr />
+</header>
+<div>
+  {% block content %}{% endblock %}
+</div>
+</body>
+</html>

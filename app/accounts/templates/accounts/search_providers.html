@@ -1,0 +1,19 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+  <h2>Find a Car-Service Provider</h2>
+  <input id="q" placeholder="Search by name or city" style="padding:.4rem;width:100%;max-width:480px;">
+  <button class="btn" onclick="doSearch()">Search</button>
+  <div id="results" class="grid" style="margin-top:1rem;"></div>
+  <h3 style="margin-top:1rem;">Map</h3>
+  <div id="map" class="map"></div>
+</div>
+<script>
+let map;
+function renderResults(items){ const c=document.getElementById('results'); c.innerHTML=''; items.forEach(p=>{ const el=document.createElement('div'); el.className='card'; el.innerHTML=`<strong>${p.company_name}</strong><br>${p.city||''}<br>${p.description||''}`; c.appendChild(el); }); }
+async function doSearch(){ const q=document.getElementById('q').value; const res=await fetch('/api/providers/?search='+encodeURIComponent(q)); const data=await res.json(); renderResults(data); map && data.forEach(p=>{ if(p.latitude&&p.longitude){ new google.maps.Marker({position:{lat:parseFloat(p.latitude),lng:parseFloat(p.longitude)}, map, title:p.company_name}); } }); }
+function initSearchMap(){ map=new google.maps.Map(document.getElementById('map'), {center:{lat:42.6977,lng:23.3219}, zoom:8}); }
+</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&callback=initSearchMap"></script>
+{% endblock %}

@@ -1,0 +1,38 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+  <h2>Edit my company &amp; contact details</h2>
+  <form method="post">{% csrf_token %}
+    <div class="grid">
+      <div class="card"><label>Company name<br><input name="company_name" value="{{ provider.company_name }}" required></label></div>
+      <div class="card"><label>Email<br><input type="email" name="email" value="{{ provider.email }}" required></label></div>
+      <div class="card"><label>Phone<br><input name="phone" value="{{ provider.phone }}" required></label></div>
+      <div class="card" style="grid-column:1/-1;"><label>Address<br><input name="address" value="{{ provider.address }}" required></label></div>
+      <div class="card" style="grid-column:1/-1;"><label>Short info (max 200 chars)<br><textarea name="description" maxlength="200">{{ provider.description }}</textarea></label></div>
+    </div>
+    <input type="hidden" name="latitude" id="lat" value="{{ provider.latitude }}">
+    <input type="hidden" name="longitude" id="lng" value="{{ provider.longitude }}">
+    <h3>Adjust map location</h3>
+    <div id="map" class="map"></div>
+    <p style="margin-top:1rem;"><button class="btn">Save</button></p>
+  </form>
+</div>
+<script>
+let marker, map;
+function initEditProvMap(){
+  const center = {lat: parseFloat('{{ provider.latitude|default:42.6977 }}'), lng: parseFloat('{{ provider.longitude|default:23.3219 }}')};
+  map = new google.maps.Map(document.getElementById('map'), {center, zoom: 12});
+  if (!isNaN(center.lat) && !isNaN(center.lng)){
+    marker = new google.maps.Marker({position:center, map});
+  }
+  map.addListener('click', (e)=>{
+    if (marker) marker.setMap(null);
+    marker = new google.maps.Marker({position:e.latLng, map});
+    document.getElementById('lat').value = e.latLng.lat();
+    document.getElementById('lng').value = e.latLng.lng();
+  });
+}
+</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&callback=initEditProvMap"></script>
+{% endblock %}
