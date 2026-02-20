@@ -2,10 +2,20 @@
 import os
 from pathlib import Path
 
+# Load /etc/autogarage.env so GOOGLE_MAPS_API_KEY etc. are available
+try:
+    from dotenv import load_dotenv
+    load_dotenv("/etc/autogarage.env")
+except ImportError:
+    pass
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY','dev-insecure')
 DEBUG = os.environ.get('DJANGO_DEBUG','True')=='True'
-ALLOWED_HOSTS = [h.strip() for h in os.environ.get('DJANGO_ALLOWED_HOSTS','localhost,127.0.0.1,[::1]').split(',') if h.strip()]
+_allowed = [h.strip() for h in os.environ.get('DJANGO_ALLOWED_HOSTS','localhost,127.0.0.1,[::1],0.0.0.0').split(',') if h.strip()]
+if '0.0.0.0' not in _allowed:
+    _allowed.append('0.0.0.0')
+ALLOWED_HOSTS = _allowed
 BASE_DOMAIN = os.environ.get('BASE_DOMAIN','localhost')
 
 INSTALLED_APPS = [
@@ -61,7 +71,12 @@ USE_I18N=True
 USE_TZ=True
 STATIC_URL='/static/'
 STATIC_ROOT=BASE_DIR/'static_collected'
-STATICFILES_DIRS=[BASE_DIR/'core'/'static']
+# Frontend SPA build (repo root frontend/dist); added to static when present
+# Django STATICFILES_DIRS tuples are (url_prefix, path)
+FRONTEND_DIST = BASE_DIR.parent / 'frontend' / 'dist'
+STATICFILES_DIRS = [BASE_DIR / 'core' / 'static'] + (
+    [('frontend', str(FRONTEND_DIST))] if FRONTEND_DIST.exists() else []
+)
 DEFAULT_AUTO_FIELD='django.db.models.BigAutoField'
 
 REST_FRAMEWORK={
