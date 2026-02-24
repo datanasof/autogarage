@@ -1,12 +1,15 @@
 
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.middleware.csrf import get_token
 from django.http import HttpResponse, JsonResponse
 from django.conf import settings
 
 def home(request):
     return render(request,'home.html')
 
+@ensure_csrf_cookie
 def spa_view(request, path=None):
     """Serve the React SPA index.html for client-side routing."""
     import json
@@ -38,6 +41,12 @@ def public_config(request):
     return JsonResponse({
         "googleMapsApiKey": getattr(settings, "GOOGLE_MAPS_API_KEY", "") or "",
     })
+
+@ensure_csrf_cookie
+def csrf_token_view(request):
+    """Return the CSRF token so the SPA can send it with POST requests. Ensures cookie is set."""
+    token = get_token(request)
+    return JsonResponse({"csrfToken": token or ""})
 
 def public_provider(request):
     provider = getattr(request, 'provider', None)

@@ -62,9 +62,10 @@ def register_provider_view(request):
         password2 = request.POST.get('password2','')
         phone = request.POST.get('phone','').strip()
         address = request.POST.get('address','').strip()
+        city = request.POST.get('city','').strip()
         description = (request.POST.get('description','') or '')[:200]
         lat = request.POST.get('latitude'); lng = request.POST.get('longitude')
-        if not all([subdomain,company_name,email,password,password2,phone,address,description,lat,lng]):
+        if not all([subdomain,company_name,email,password,password2,phone,address,city,description,lat,lng]):
             messages.error(request,'Please complete all fields and pick your map location.')
         elif password!=password2:
             messages.error(request,'Passwords do not match.')
@@ -75,9 +76,13 @@ def register_provider_view(request):
         else:
             u = User(username=email, email=email, role=User.Roles.PROVIDER)
             u.set_password(password); u.save()
-            Provider.objects.create(user=u, company_name=company_name, slug=subdomain,
-                                    phone=phone, email=email, address=address,
-                                    description=description, latitude=lat, longitude=lng)
+            prov = Provider(user=u, company_name=company_name, slug=subdomain,
+                           phone=phone, email=email, address=address, city=city,
+                           description=description, latitude=lat, longitude=lng)
+            img = request.FILES.get('image')
+            if img:
+                prov.image = img
+            prov.save()
             login(request,u)
             return redirect('provider_dashboard')
     return render(request, 'accounts/register_provider.html')

@@ -71,6 +71,8 @@ USE_I18N=True
 USE_TZ=True
 STATIC_URL='/static/'
 STATIC_ROOT=BASE_DIR/'static_collected'
+MEDIA_URL='/media/'
+MEDIA_ROOT=BASE_DIR/'images'  # User-uploaded images (providers, etc.)
 # Frontend SPA build (repo root frontend/dist); added to static when present
 # Django STATICFILES_DIRS tuples are (url_prefix, path)
 FRONTEND_DIST = BASE_DIR.parent / 'frontend' / 'dist'

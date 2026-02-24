@@ -2,10 +2,16 @@
 from django.db import models
 from django.conf import settings
 
+def provider_image_upload_to(instance, filename):
+    """Store provider images in images/providers/ within the project."""
+    ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else 'jpg'
+    return f'providers/{instance.slug}.{ext}'
+
 class Provider(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='provider_profile')
     company_name = models.CharField(max_length=200)
     slug = models.SlugField(unique=True)
+    image = models.FileField(upload_to=provider_image_upload_to, blank=True, null=True)
     phone = models.CharField(max_length=32, blank=True)
     email = models.EmailField(blank=True)
     address = models.CharField(max_length=255, blank=True)

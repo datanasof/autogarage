@@ -34,10 +34,14 @@ class ProviderAppointmentsView(generics.ListAPIView):
         return qs.order_by('-start_datetime')
 
 class AppointmentStatusUpdateView(generics.UpdateAPIView):
-    queryset = Appointment.objects.all()
     serializer_class = AppointmentStatusSerializer
     permission_classes = [permissions.IsAuthenticated]
-    http_method_names = ['patch']
+    http_method_names = ['get', 'patch']
+
+    def get_queryset(self):
+        qs = Appointment.objects.select_related('provider', 'user', 'service')
+        user = self.request.user
+        return qs.filter(user=user) | qs.filter(provider__user=user)
 
 class CalendarEventsView(APIView):
     permission_classes = [permissions.IsAuthenticated]

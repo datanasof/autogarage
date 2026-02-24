@@ -4,4 +4,4 @@ from rest_framework.response import Response
 from .serializers import MeSerializer
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def me(request): return Response(MeSerializer(request.user).data)
+def me(request): return Response(MeSerializer(request.user, context={'request': request}).data)
