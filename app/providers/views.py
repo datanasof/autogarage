@@ -3,7 +3,10 @@ from rest_framework import generics, filters
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from datetime import datetime, timedelta
+from django.utils.timezone import make_aware
+from datetime import datetime, timedelta, time
+from zoneinfo import ZoneInfo
+
 from .models import Provider, BusinessHours, Service
 from appointments.models import Appointment
 from .serializers import ProviderListSerializer, ProviderDetailSerializer
@@ -22,6 +25,10 @@ class ProviderSlotsView(APIView):
         except ValueError:
             return Response({'error': 'Invalid date format'}, status=400)
         prov = get_object_or_404(Provider, slug=slug)
+        try:
+            tz = ZoneInfo(prov.timezone) if prov.timezone else ZoneInfo("UTC")
+        except Exception:
+            tz = ZoneInfo("UTC")
         try:
             svc = Service.objects.get(pk=service_id, provider=prov, is_active=True)
         except Service.DoesNotExist:
@@ -45,14 +52,88 @@ class ProviderSlotsView(APIView):
             end_dt = datetime.combine(day, bh.close_time)
             while curr + timedelta(minutes=duration) <= end_dt:
                 slot_end = curr + timedelta(minutes=duration)
+                curr_aware = make_aware(curr, tz)
+                slot_end_aware = make_aware(slot_end, tz)
                 overlap = any(
-                    curr < e and slot_end > s
+                    curr_aware < e and slot_end_aware > s
                     for s, e in busy
                 )
                 if not overlap:
                     slots.append({'start': curr.isoformat(), 'end': slot_end.isoformat()})
                 curr += timedelta(minutes=slot_mins)
         return Response(slots)
+
+
+class ProviderWeekSlotsView(APIView):
+    """Return free and busy slots for a week. Used for weekly calendar view."""
+
+    def get(self, request, slug):
+        week_start = request.GET.get('week_start')
+        service_id = request.GET.get('service_id')
+        if not week_start:
+            return Response({'error': 'week_start required'}, status=400)
+        try:
+            start_date = datetime.strptime(week_start, '%Y-%m-%d').date()
+        except ValueError:
+            return Response({'error': 'Invalid date format'}, status=400)
+        prov = get_object_or_404(Provider, slug=slug)
+        try:
+            tz = ZoneInfo(prov.timezone) if prov.timezone else ZoneInfo("UTC")
+        except Exception:
+            tz = ZoneInfo("UTC")
+        # Always use 30-min slots for the calendar so one click books exactly one slot
+        duration = 30
+        if service_id:
+            try:
+                Service.objects.get(pk=service_id, provider=prov, is_active=True)
+            except Service.DoesNotExist:
+                return Response({'error': 'Service not found'}, status=404)
+        end_date = start_date + timedelta(days=6)
+        busy = list(
+            Appointment.objects.filter(
+                provider=prov,
+                status__in=['booked', 'confirmed'],
+                start_datetime__date__gte=start_date,
+                start_datetime__date__lte=end_date,
+            ).values_list('start_datetime', 'end_datetime')
+        )
+        result = {}
+        for d in range(7):
+            day = start_date + timedelta(days=d)
+            w = day.weekday()
+            hours = list(BusinessHours.objects.filter(provider=prov, weekday=w).order_by('open_time'))
+            slot_mins = 30
+            if hours:
+                slot_mins = hours[0].slot_size_minutes or 30
+            # Default 8:00-18:00 when no business hours configured
+            hour_ranges = [(bh.open_time, bh.close_time) for bh in hours] if hours else [(time(8, 0), time(18, 0))]
+            free_slots = []
+            for open_t, close_t in hour_ranges:
+                curr = datetime.combine(day, open_t)
+                end_dt = datetime.combine(day, close_t)
+                while curr + timedelta(minutes=duration) <= end_dt:
+                    slot_end = curr + timedelta(minutes=duration)
+                    curr_aware = make_aware(curr, tz)
+                    slot_end_aware = make_aware(slot_end, tz)
+                    overlap = any(
+                        curr_aware < e and slot_end_aware > s
+                        for s, e in busy
+                    )
+                    if not overlap:
+                        free_slots.append({'start': curr.isoformat(), 'end': slot_end.isoformat()})
+                    curr += timedelta(minutes=slot_mins)
+            # Convert appointment times to provider timezone for correct local date
+            def _local_date(dt):
+                if hasattr(dt, 'astimezone'):
+                    return dt.astimezone(tz).date()
+                return dt.date()
+            busy_slots = [
+                {'start': s.isoformat(), 'end': e.isoformat()}
+                for s, e in busy
+                if _local_date(s) == day
+            ]
+            result[day.isoformat()] = {'free': free_slots, 'busy': busy_slots}
+        return Response(result)
 
 
 class ProviderListView(generics.ListAPIView):

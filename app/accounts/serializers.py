@@ -1,14 +1,24 @@
 from rest_framework import serializers
 from .models import User
-from providers.models import Provider
+from providers.models import Provider, Service
+
+
+class ServiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Service
+        fields = ("id", "name", "description", "price_cents", "duration_minutes", "is_active")
 
 
 class ProviderProfileSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
+    services = serializers.SerializerMethodField()
 
     class Meta:
         model = Provider
-        fields = ("id", "company_name", "slug", "phone", "email", "address", "city", "image")
+        fields = ("id", "company_name", "slug", "phone", "email", "address", "city", "description", "image", "services")
+
+    def get_services(self, obj):
+        return ServiceSerializer(obj.services.filter(is_active=True), many=True).data
 
     def get_image(self, obj):
         if obj.image and obj.image.name:
