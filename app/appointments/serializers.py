@@ -7,6 +7,28 @@ from .models import Appointment
 from providers.models import Provider
 
 
+def get_or_create_slot_for_booking(provider, start_datetime, validated_data):
+    """
+    Reuse a canceled appointment for the same slot if one exists; otherwise create new.
+    Prevents unique constraint violation when rebooking a canceled slot.
+    """
+    canceled = Appointment.objects.filter(
+        provider=provider,
+        start_datetime=start_datetime,
+        status=Appointment.Status.CANCELED,
+    ).first()
+    if canceled:
+        canceled.user = validated_data['user']
+        canceled.service = validated_data['service']
+        canceled.end_datetime = validated_data['end_datetime']
+        canceled.status = Appointment.Status.BOOKED
+        canceled.source = validated_data['source']
+        canceled.notes = validated_data.get('notes', '')
+        canceled.save()
+        return canceled
+    return None
+
+
 class AppointmentSerializer(serializers.ModelSerializer):
     provider_name = serializers.CharField(source='provider.company_name', read_only=True)
     service_name = serializers.CharField(source='service.name', read_only=True)
@@ -46,6 +68,23 @@ class AppointmentSerializer(serializers.ModelSerializer):
                 else:
                     dt_naive = dt.replace(tzinfo=None)
                 validated_data[field] = timezone.make_aware(dt_naive, tz)
+            # Block if slot already has active booking
+            start = validated_data.get('start_datetime')
+            if start:
+                active = Appointment.objects.filter(
+                    provider=provider,
+                    start_datetime=start,
+                    status__in=[Appointment.Status.BOOKED, Appointment.Status.CONFIRMED, Appointment.Status.COMPLETED],
+                ).exists()
+                if active:
+                    raise serializers.ValidationError({'start_datetime': 'This time slot is already booked.'})
+                # Reuse canceled slot if one exists (avoids unique constraint on MySQL)
+                reused = get_or_create_slot_for_booking(
+                    provider, start,
+                    {**validated_data, 'user': request.user, 'source': 'end_user'},
+                )
+                if reused:
+                    return reused
         return super().create(validated_data)
 
 class AppointmentStatusSerializer(serializers.ModelSerializer):

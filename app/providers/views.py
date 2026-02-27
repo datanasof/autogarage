@@ -95,7 +95,7 @@ class ProviderWeekSlotsView(APIView):
                 status__in=['booked', 'confirmed'],
                 start_datetime__date__gte=start_date,
                 start_datetime__date__lte=end_date,
-            ).values_list('start_datetime', 'end_datetime')
+            ).values_list('id', 'start_datetime', 'end_datetime')
         )
         result = {}
         for d in range(7):
@@ -117,7 +117,7 @@ class ProviderWeekSlotsView(APIView):
                     slot_end_aware = make_aware(slot_end, tz)
                     overlap = any(
                         curr_aware < e and slot_end_aware > s
-                        for s, e in busy
+                        for _id, s, e in busy
                     )
                     if not overlap:
                         free_slots.append({'start': curr.isoformat(), 'end': slot_end.isoformat()})
@@ -128,8 +128,8 @@ class ProviderWeekSlotsView(APIView):
                     return dt.astimezone(tz).date()
                 return dt.date()
             busy_slots = [
-                {'start': s.isoformat(), 'end': e.isoformat()}
-                for s, e in busy
+                {'id': aid, 'start': s.isoformat(), 'end': e.isoformat()}
+                for aid, s, e in busy
                 if _local_date(s) == day
             ]
             result[day.isoformat()] = {'free': free_slots, 'busy': busy_slots}

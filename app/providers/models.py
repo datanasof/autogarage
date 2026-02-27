@@ -16,6 +16,7 @@ class Provider(models.Model):
     email = models.EmailField(blank=True)
     address = models.CharField(max_length=255, blank=True)
     city = models.CharField(max_length=64, blank=True)
+    country = models.CharField(max_length=64, blank=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     timezone = models.CharField(max_length=64, default='Europe/Sofia')

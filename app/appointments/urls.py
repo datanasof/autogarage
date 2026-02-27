@@ -1,12 +1,14 @@
 
 from django.urls import path
 from .views import (
-    AppointmentCreateView, MyAppointmentsView, ProviderAppointmentsView, AppointmentStatusUpdateView,
-    CalendarEventsView, ProviderCalendarEventsView, htmx_appointment_form, htmx_appointment_create
+    AppointmentCreateView, MyAppointmentsView, ProviderAppointmentsView, ProviderCreateAppointmentView,
+    AppointmentStatusUpdateView, CalendarEventsView, ProviderCalendarEventsView,
+    htmx_appointment_form, htmx_appointment_create
 )
 
 urlpatterns = [
     path('', AppointmentCreateView.as_view(), name='appointment_create'),
+    path('provider-create/', ProviderCreateAppointmentView.as_view(), name='provider_create_appointment'),
     path('mine/', MyAppointmentsView.as_view(), name='appointments_mine'),
     path('provider/', ProviderAppointmentsView.as_view(), name='appointments_provider'),
     path('<int:pk>/', AppointmentStatusUpdateView.as_view(), name='appointment_update'),

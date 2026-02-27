@@ -5,7 +5,7 @@ from django.contrib.auth import login, logout
 from django.db import transaction
 from django.contrib.auth.decorators import login_required
 from accounts.models import User
-from providers.models import Provider
+from providers.models import Provider, Service
 from django.views.decorators.http import require_http_methods
 
 @require_http_methods(["GET","POST"])
@@ -17,7 +17,7 @@ def login_view(request):
             u = User.objects.get(email__iexact=email)
             if u.check_password(password):
                 login(request, u)
-                return redirect('provider_dashboard' if u.role==User.Roles.PROVIDER else 'user_dashboard')
+                return redirect('/provider-dashboard' if u.role==User.Roles.PROVIDER else 'user_dashboard')
             else:
                 messages.error(request, 'Invalid email/password')
         except User.DoesNotExist:
@@ -63,9 +63,10 @@ def register_provider_view(request):
         phone = request.POST.get('phone','').strip()
         address = request.POST.get('address','').strip()
         city = request.POST.get('city','').strip()
+        country = request.POST.get('country','').strip()
         description = (request.POST.get('description','') or '')[:200]
         lat = request.POST.get('latitude'); lng = request.POST.get('longitude')
-        if not all([subdomain,company_name,email,password,password2,phone,address,city,description,lat,lng]):
+        if not all([subdomain,company_name,email,password,password2,phone,address,city,country,description,lat,lng]):
             messages.error(request,'Please complete all fields and pick your map location.')
         elif password!=password2:
             messages.error(request,'Passwords do not match.')
@@ -77,12 +78,20 @@ def register_provider_view(request):
             u = User(username=email, email=email, role=User.Roles.PROVIDER)
             u.set_password(password); u.save()
             prov = Provider(user=u, company_name=company_name, slug=subdomain,
-                           phone=phone, email=email, address=address, city=city,
+                           phone=phone, email=email, address=address, city=city, country=country,
                            description=description, latitude=lat, longitude=lng)
             img = request.FILES.get('image')
             if img:
                 prov.image = img
             prov.save()
+            Service.objects.create(
+                provider=prov,
+                name='Initial inspection',
+                description='Initial vehicle inspection',
+                price_cents=0,
+                duration_minutes=60,
+                is_active=True,
+            )
             login(request,u)
-            return redirect('provider_dashboard')
+            return redirect('/provider-dashboard')
     return render(request, 'accounts/register_provider.html')

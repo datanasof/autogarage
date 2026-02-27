@@ -3,6 +3,7 @@ from django.db import models
 from django.conf import settings
 from providers.models import Provider, Service
 
+
 class Appointment(models.Model):
     class Status(models.TextChoices):
         BOOKED='booked','Booked'
@@ -21,4 +22,10 @@ class Appointment(models.Model):
     source = models.CharField(max_length=20, choices=Source.choices, default=Source.END_USER)
     notes = models.TextField(blank=True)
     class Meta:
-        constraints=[models.UniqueConstraint(fields=['provider','start_datetime'], name='uniq_provider_start')]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['provider', 'start_datetime'],
+                condition=models.Q(status__in=['booked', 'confirmed', 'completed']),
+                name='uniq_provider_start_active',
+            ),
+        ]

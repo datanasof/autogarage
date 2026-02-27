@@ -11,11 +11,12 @@ def user_dashboard(request):
 
 @login_required
 def provider_dashboard(request):
+    """Redirect to React SPA provider dashboard (weekly calendar format)."""
     try:
         request.user.provider_profile
     except Provider.DoesNotExist:
         messages.error(request, 'No provider profile is linked to your account yet.')
-    return render(request, 'accounts/provider_dashboard.html')
+    return redirect('/provider-dashboard')
 
 @login_required
 @transaction.atomic
@@ -35,7 +36,7 @@ def edit_provider_view(request):
     try:
         provider = request.user.provider_profile
     except Provider.DoesNotExist:
-        messages.error(request,'No provider profile linked.'); return redirect('provider_dashboard')
+        messages.error(request,'No provider profile linked.'); return redirect('/provider-dashboard')
     if request.method=='POST':
         provider.company_name = request.POST.get('company_name','').strip() or provider.company_name
         provider.phone = request.POST.get('phone','').strip()
@@ -46,7 +47,7 @@ def edit_provider_view(request):
         provider.longitude = request.POST.get('longitude') or provider.longitude
         provider.save()
         messages.success(request,'Company details updated.')
-        return redirect('provider_dashboard')
+        return redirect('/provider-dashboard')
     return render(request,'accounts/edit_provider.html',{'provider':provider})
 
 @login_required

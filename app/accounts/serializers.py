@@ -15,7 +15,7 @@ class ProviderProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Provider
-        fields = ("id", "company_name", "slug", "phone", "email", "address", "city", "description", "image", "services")
+        fields = ("id", "company_name", "slug", "phone", "email", "address", "city", "country", "description", "image", "services", "latitude", "longitude")
 
     def get_services(self, obj):
         return ServiceSerializer(obj.services.filter(is_active=True), many=True).data
